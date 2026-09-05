@@ -418,7 +418,7 @@ def fig_mechanism(out="paper/figures/audit_fig5_mechanism"):
         for s in subs
     }
     x = np.arange(5)
-    fig, axes = plt.subplots(1, 2, figsize=(7.4, 3.2), gridspec_kw={"width_ratios": [1.0, 1.35]})
+    fig, axes = plt.subplots(1, 2, figsize=(7.4, 3.0), gridspec_kw={"width_ratios": [1.0, 1.35]})
     ax = axes[0]
     w = 0.27
     b1 = ax.bar(
