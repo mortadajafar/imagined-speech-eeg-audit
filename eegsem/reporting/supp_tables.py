@@ -324,7 +324,7 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
     ]
     out.append(
         tab(
-            "Matched-pool and within-run retrieval of the EEGNet decoder (E11, seed 0), and the relation between run-probe confidence and retrieval success.",
+            "Matched-pool and within-run retrieval of the EEGNet decoder (E11, seed 0; three-seed values in Table~\\ref{tab:s12}), and the relation between run-probe confidence and retrieval success.",
             [
                 "participant",
                 "p100",
@@ -483,6 +483,77 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
             rows,
             "tab:s0",
         ),
+    )
+    # S11/S12: leave-one-day-out (E12c) and three-seed within-run metrics
+    e12c = [r for r in load(logs_dir + "/e12c/**/summary_e12c.json") if not r.get("error")]
+    rows = [
+        [
+            r["tag"].replace("e12c_lodo_", "").replace("sub", "S").replace("_day", " day "),
+            str(r["n_test"]),
+            str(r["pool"]),
+            pct(r["top10"]),
+            pct(r["top1_pool100"]),
+            f"{r['rank_pct']:.3f}",
+            pct(r["cat"]),
+            pct(r["noise_top1_pool100"]),
+            f"{r['noise_rank_pct']:.3f}",
+        ]
+        for r in e12c
+        if "lodo" in r["tag"]
+    ]
+    out.append(
+        tab(
+            "Leave-one-day-out evaluation on Chisco (E12c, EEGNet seed 0): all nine blocks of one recording day held out per fold.",
+            [
+                "fold",
+                "test trials",
+                "pool",
+                "top-10",
+                "p100",
+                "rank pct",
+                "cat",
+                "noise p100",
+                "noise rank pct",
+            ],
+            rows,
+            "tab:s11",
+        )
+    )
+    e11 = {r["sub"]: r for r in load(logs_dir + "/e11/**/summary_e11.json") if not r.get("error")}
+    rows = []
+    for s_ in sorted(e11):
+        seeds = [
+            (0, e11[s_]["aligner_p100"], e11[s_]["aligner_ws_top1"], e11[s_]["xs_matched_top1"])
+        ] + [
+            (int(r["tag"][-1]), r["top1_pool100"], r["ws_top1"], r["xs_matched_top1"])
+            for r in e12c
+            if "insub" in r["tag"] and r["tag"].split("_")[2] == s_
+        ]
+        for sd, a, b, c in sorted(seeds):
+            rows.append(
+                [
+                    s_.replace("sub", "S"),
+                    str(sd),
+                    pct(a),
+                    pct(b),
+                    pct(e11[s_]["aligner_ws_chance"]),
+                    pct(c),
+                ]
+            )
+    out.append(
+        tab(
+            "Within-run and matched-pool retrieval of the EEGNet decoder for three seeds (E11, E12c).",
+            [
+                "participant",
+                "seed",
+                "p100",
+                "within-run top-1",
+                "chance",
+                "matched cross-run top-1",
+            ],
+            rows,
+            "tab:s12",
+        )
     )
     open(out_path, "w", encoding="utf-8").write("\n".join(out))
     print("supp_tables.tex written with", len(out), "tables")

@@ -371,3 +371,143 @@ def fig_occlusion(
         fig.savefig(f"{out}.{ext}", bbox_inches="tight")
     plt.close(fig)
     print("saved", out)
+
+
+def fig_mechanism(out="paper/figures/audit_fig5_mechanism"):
+    """Fig 5: run identity is decodable and drives retrieval; matched pools and leave-one-day-out."""
+    e11 = json.load(open(glob.glob("kaggle/logs/e11/**/summary_e11.json", recursive=True)[0]))
+    e12 = [
+        r
+        for r in json.load(
+            open(glob.glob("kaggle/logs/e12/**/summary_e12.json", recursive=True)[0])
+        )
+        if not r.get("error")
+    ]
+    e12c = [
+        r
+        for r in json.load(
+            open(glob.glob("kaggle/logs/e12c/**/summary_e12c.json", recursive=True)[0])
+        )
+        if not r.get("error")
+    ]
+    subs = [r["sub"] for r in e11]
+    # three-seed averages for the in-subject conditions (seed 0 from E11, seeds 1-2 from E12c)
+    extra = {
+        s: [r for r in e12c if "insub" in r["tag"] and r["tag"].split("_")[2] == s] for s in subs
+    }
+    p100 = {
+        s: np.mean([e11[i]["aligner_p100"]] + [r["top1_pool100"] for r in extra[s]])
+        for i, s in enumerate(subs)
+    }
+    matched = {
+        s: np.mean([e11[i]["xs_matched_top1"]] + [r["xs_matched_top1"] for r in extra[s]])
+        for i, s in enumerate(subs)
+    }
+    within = {
+        s: np.mean([e11[i]["aligner_ws_top1"]] + [r["ws_top1"] for r in extra[s]])
+        for i, s in enumerate(subs)
+    }
+    chance = {s: e11[i]["aligner_ws_chance"] for i, s in enumerate(subs)}
+    loro = {
+        s: np.mean([r["top1_pool100"] for r in e12 if r["tag"].split("_")[1] == s]) for s in subs
+    }
+    lodo = {
+        s: np.mean(
+            [r["top1_pool100"] for r in e12c if "lodo" in r["tag"] and r["tag"].split("_")[2] == s]
+        )
+        for s in subs
+    }
+    x = np.arange(5)
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.2), gridspec_kw={"width_ratios": [1.1, 1.1]})
+    ax = axes[0]
+    w = 0.27
+    b1 = ax.bar(
+        x - w,
+        [100 * r["run_acc"] for r in e11],
+        w * 0.92,
+        color=C["eeg"],
+        label="run identity decoded from EEG (45-way)",
+    )
+    b2 = ax.bar(
+        x,
+        [100 * r["emb_run_acc"] for r in e11],
+        w * 0.92,
+        color="#eb6834",
+        label="run identity from EEGNet embedding (linear probe)",
+    )
+    b3 = ax.bar(
+        x + w,
+        [100 * max(r["pos_within_run_spearman"], 0) for r in e11],
+        w * 0.92,
+        color="#1baf7a",
+        label="position within run (Spearman ρ × 100)",
+    )
+    ax.axhline(100 / 45, color=INK2, lw=1, ls=(0, (4, 3)))
+    ax.text(4.45, 100 / 45 + 2.5, "chance 2.2%", fontsize=7, color=INK2, ha="right")
+    ax.set_xticks(x)
+    ax.set_xticklabels([s.replace("sub", "S") for s in subs])
+    ax.set_ylabel("accuracy (%) / ρ × 100", color=INK)
+    ax.yaxis.grid(True, color=GRID, lw=0.8)
+    ax.set_axisbelow(True)
+    ax.set_ylim(0, 105)
+    ax.legend(
+        handles=[b1, b2, b3],
+        frameon=False,
+        fontsize=7,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.16),
+        ncol=1,
+    )
+    ax = axes[1]
+    conds = [
+        "full pool",
+        "matched,\nother-run",
+        "matched,\nsame-run",
+        "leave-\nruns-out",
+        "leave-one-\nday-out",
+    ]
+    vals = np.array(
+        [
+            [p100[s] / 0.01 for s in subs],
+            [matched[s] / chance[s] for s in subs],
+            [within[s] / chance[s] for s in subs],
+            [loro[s] / 0.01 for s in subs],
+            [lodo[s] / 0.01 for s in subs],
+        ]
+    )
+    m = vals.mean(1)
+    sd = vals.std(1, ddof=1)
+    xx = np.arange(5)
+    ax.bar(
+        xx,
+        m,
+        0.6,
+        color=[C["eeg"], C["eeg"], "#a8a7a3", "#a8a7a3", "#a8a7a3"],
+        yerr=sd,
+        error_kw=dict(ecolor=INK2, lw=0.8, capsize=2),
+        zorder=2,
+    )
+    rng = np.random.default_rng(0)
+    for k in range(5):
+        ax.scatter(
+            xx[k] + rng.uniform(-0.15, 0.15, 5),
+            vals[k],
+            s=9,
+            color="white",
+            edgecolor=INK,
+            linewidth=0.6,
+            zorder=3,
+        )
+    ax.axhline(1, color=INK2, lw=1, ls=(0, (4, 3)))
+    ax.text(-0.4, 1.12, "chance", fontsize=7, color=INK2, ha="left")
+    ax.set_xticks(xx)
+    ax.set_xticklabels(conds, fontsize=7)
+    ax.set_xlabel("EEGNet evaluation condition", color=INK, fontsize=8)
+    ax.set_ylabel("top-1 accuracy / chance", color=INK)
+    ax.yaxis.grid(True, color=GRID, lw=0.8)
+    ax.set_axisbelow(True)
+    fig.tight_layout()
+    for ext in ("pdf", "png"):
+        fig.savefig(f"{out}.{ext}", bbox_inches="tight")
+    plt.close(fig)
+    print("saved", out)
