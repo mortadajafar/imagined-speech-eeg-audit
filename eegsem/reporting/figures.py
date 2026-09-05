@@ -267,3 +267,107 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def fig_occlusion(
+    logs=("kaggle/logs/e3b_seeds/results", "kaggle/logs/e7_controls/results"),
+    out="paper/figures/audit_fig4_occlusion",
+):
+    """Fig 4: relative MRR drop when 0.5 s windows or scalp regions of the imagined epoch are occluded."""
+    import re
+    from collections import defaultdict
+
+    occ = defaultdict(lambda: defaultdict(list))
+    for d in logs:
+        for f in glob.glob(os.path.join(d, "*.json")):
+            if f.endswith("_preds.json") or "summary" in f:
+                continue
+            run = json.load(open(f))
+            o = run.get("occlusion", {}).get("sub0")
+            if not o:
+                continue
+            tag = run["args"]["tag"]
+            cond = (
+                "A"
+                if ("A_imagine" in tag or "e7_chisco" in tag)
+                else ("B" if "B_read" in tag else ("C" if "C_read" in tag else None))
+            )
+            if cond is None:
+                continue
+            base = o["baseline"]["mrr"]
+            for t in o["temporal"]:
+                occ[cond][("t", t["t_start"])].append(100 * (base - t["mrr"]) / base)
+            for k, v in o["regions"].items():
+                occ[cond][("r", k)].append(100 * (base - v["mrr"]) / base)
+    cols = {"A": C["eeg"], "B": C["run"], "C": C["pos3"]}
+    labels = {
+        "A": "imagined-only decoder",
+        "B": "reading-trained, tested on imagined",
+        "C": "reading-pretrained + fine-tuned",
+    }
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.0), gridspec_kw={"width_ratios": [1, 1.3]})
+    ax = axes[0]
+    handles = []
+    for c in "ABC":
+        ks = sorted(k for k in occ[c] if k[0] == "t")
+        m = [np.mean(occ[c][k]) for k in ks]
+        se = [np.std(occ[c][k], ddof=1) / np.sqrt(len(occ[c][k])) for k in ks]
+        handles.append(
+            ax.errorbar(
+                [k[1] + 0.25 for k in ks],
+                m,
+                yerr=se,
+                color=cols[c],
+                marker="o",
+                ms=4,
+                lw=1.6,
+                capsize=2,
+                label=labels[c],
+            )
+        )
+    ax.set_xlabel("occluded 0.5 s window (centre, s after recall onset)", color=INK)
+    ax.yaxis.grid(True, color=GRID, lw=0.8)
+    ax.set_axisbelow(True)
+    ax.set_ylabel("MRR drop when occluded (%)", color=INK)
+    ax.set_ylim(0, None)
+    ax.legend(
+        handles=handles,
+        frameon=False,
+        fontsize=7,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.22),
+        ncol=1,
+    )
+    ax = axes[1]
+    regs = [
+        "frontal",
+        "fronto-central",
+        "central",
+        "centro-parietal",
+        "temporal",
+        "parietal",
+        "parieto-occipital",
+    ]
+    w = 0.27
+    for j, c in enumerate("ABC"):
+        m = [np.mean(occ[c][("r", r)]) for r in regs]
+        se = [np.std(occ[c][("r", r)], ddof=1) / np.sqrt(len(occ[c][("r", r)])) for r in regs]
+        ax.bar(
+            np.arange(len(regs)) + (j - 1) * w,
+            m,
+            width=w * 0.92,
+            color=cols[c],
+            yerr=se,
+            error_kw=dict(ecolor=INK2, lw=0.8, capsize=2),
+        )
+    ax.set_xticks(range(len(regs)))
+    ax.set_xticklabels(["F", "FC", "C", "CP", "T", "P", "PO"])
+    ax.set_xlabel("occluded scalp region", color=INK)
+    ax.yaxis.grid(True, color=GRID, lw=0.8)
+    ax.set_axisbelow(True)
+    ax.set_ylabel("MRR drop when occluded (%)", color=INK)
+    fig.tight_layout()
+    for ext in ("pdf", "png"):
+        fig.savefig(f"{out}.{ext}", bbox_inches="tight")
+    plt.close(fig)
+    print("saved", out)
