@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eegsem"
+version = "0.1.0"
+description = "Auditing sentence-level imagined-speech EEG decoding: contrastive decoders, no-EEG design baselines and run-controlled evaluation on Chisco and COFETT"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Mortada Jafar", email = "mortada@ut.ac.ir"}, {name = "Amir Mohammad Nasrollahi", email = "nasrollahi.research@gmail.com"}]
+requires-python = ">=3.10"
+dependencies = ["numpy", "scipy", "scikit-learn", "torch", "einops", "sentence-transformers", "mne", "matplotlib", "pandas"]
+
+[project.optional-dependencies]
+dev = ["black", "build", "kaggle"]
+
+[tool.setuptools.packages.find]
+include = ["eegsem*"]
+
+[tool.black]
+line-length = 100

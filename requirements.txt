@@ -1,0 +1,11 @@
+numpy
+scipy
+scikit-learn
+torch
+einops
+sentence-transformers
+mne
+matplotlib
+pandas
+jieba          # BrainMosaic re-implementation (Chinese segmentation)
+kaggle         # pushing experiments to Kaggle

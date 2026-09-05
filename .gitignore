@@ -1,0 +1,20 @@
+# environments and caches
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+
+# local working material that is not part of the release
+legacy/
+src/
+kaggle/
+notes/
+paper/
+papers/
+external/
+data/kaggle_meta_upload/
+PLAN.md
+EEG.md
+*.token
