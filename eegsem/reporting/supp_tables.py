@@ -8,13 +8,13 @@ def load(pat):
     return json.load(open(f[0], encoding="utf-8")) if f else []
 
 
-def tab(caption, header, rows, label):
+def tab(caption, header, rows, label, colspec=None):
     if not rows:
         return "% table %s omitted (no data)\n" % label
     rows = [[c.replace("_", "\\_") if "$" not in c else c for c in r] for r in rows]
-    cols = "l" + "c" * (len(header) - 1)
+    cols = colspec or "l" + "c" * (len(header) - 1)
     return (
-        "\\begin{table*}[t]\\centering\\caption{%s}\\label{%s}\\footnotesize\\begin{tabular}{%s}\\toprule\n%s \\\\\\midrule\n%s\n\\bottomrule\\end{tabular}\\end{table*}\n"
+        "\\begin{table*}[t]\\centering\\caption{%s}\\label{%s}\\footnotesize\\setlength{\\tabcolsep}{4pt}\\begin{tabular}{%s}\\toprule\n%s \\\\\\midrule\n%s\n\\bottomrule\\end{tabular}\\end{table*}\n"
         % (
             caption,
             label,
@@ -270,7 +270,7 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
                 "MRR",
                 "cat",
                 "within-run top-1",
-                "matched cross-run top-1",
+                "matched other-run top-1",
             ],
             rows,
             "tab:s7",
@@ -328,12 +328,12 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
             [
                 "participant",
                 "p100",
-                "matched cross-run top-1",
+                "matched other-run top-1",
                 "within-run top-1",
                 "chance",
-                "$\\rho$(run conf., top-10 hit)",
-                "top-10 | run correct",
-                "top-10 | run wrong",
+                "$\\rho$(run conf., hit)",
+                "top-10 $\\mid$ run correct",
+                "top-10 $\\mid$ run wrong",
             ],
             rows,
             "tab:s8b",
@@ -482,6 +482,7 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
             ["identifier", "content", "script folder", "seeds"],
             rows,
             "tab:s0",
+            colspec="l>{\\raggedright\\arraybackslash}p{5cm}>{\\raggedright\\arraybackslash}p{6cm}>{\\raggedright\\arraybackslash}p{2.8cm}",
         ),
     )
     # S11/S12: leave-one-day-out (E12c) and three-seed within-run metrics
@@ -549,7 +550,7 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
                 "p100",
                 "within-run top-1",
                 "chance",
-                "matched cross-run top-1",
+                "matched other-run top-1",
             ],
             rows,
             "tab:s12",
