@@ -465,7 +465,7 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
             "E12 / E12b / E12c",
             "leave-runs-out (random folds), COFETT held-out day, leave-one-day-out + seeds",
             "kaggle/e12_loro, e12b_cofett_day, e12c_lodo_seeds",
-            "0 (E12c: 0,1,2)",
+            "0; E12c: leave-one-day-out 0, within-run/matched-pool 0,1,2",
         ],
         ["E13", "bge-m3 robustness", "kaggle/e13_embedding", "0"],
         [
