@@ -1,6 +1,6 @@
 # Auditing sentence-level imagined-speech EEG decoding
 
-Code for *Auditing Sentence-Level Imagined-Speech EEG Decoding: Run Identity and Stimulus-Order Confounds* (Jafar & Nasrollahi, 2026). The package trains contrastive EEG-to-sentence-embedding decoders on the Chisco and COFETT imagined-speech corpora, evaluates them with run-controlled metrics, and compares them with predictors that never see EEG.
+Code for *Auditing Sentence-Level Imagined-Speech EEG Decoding: Run Identity and Stimulus-Order Confounds*. The package trains contrastive EEG-to-sentence-embedding decoders on the Chisco and COFETT imagined-speech corpora, evaluates them with run-controlled metrics, and compares them with predictors that never see EEG.
 
 ## Layout
 
