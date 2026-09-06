@@ -21,6 +21,11 @@ def main():
     parser.add_argument("--name", required=True, help="kernel slug, e.g. in-subject-decoding")
     parser.add_argument("--subject", default=None, help="fills {S} in the registry entry")
     parser.add_argument(
+        "--owner",
+        default=None,
+        help="Kaggle user who will own the kernel (default: registry owner)",
+    )
+    parser.add_argument(
         "script_args", nargs="*", help="arguments appended to the script (after --)"
     )
     opts = parser.parse_args()
@@ -36,9 +41,18 @@ def main():
 
     work = tempfile.mkdtemp()
     shutil.copy(os.path.join(HERE, opts.script), work)
+    script_args = entry.get("args", "").split() + list(opts.script_args)
+    if (
+        script_args
+    ):  # script kernels take no command line, so the arguments are written into the copy
+        path = os.path.join(work, opts.script)
+        body = open(path).read()
+        open(path, "w").write(
+            f"import sys; sys.argv[1:] = {script_args!r}  # set by push_to_kaggle.py\n" + body
+        )
     shutil.copy(os.path.join(HERE, "_common.py"), work)
     metadata = {
-        "id": f"{owner}/{opts.name}",
+        "id": f"{opts.owner or owner}/{opts.name}",
         "title": opts.name,
         "code_file": opts.script,
         "language": "python",
