@@ -6,7 +6,12 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import RidgeCV
 from .training import Pool, channel_stats, category_centroids, log
 from .data.text_bank import TextBank
-from .evaluation.metrics import retrieval_metrics, zero_shot_category, semantic_similarity
+from .evaluation.metrics import (
+    retrieval_metrics,
+    zero_shot_category,
+    semantic_similarity,
+    within_run_metrics,
+)
 
 
 def feats(X, mu, sd, pool_len=10):
@@ -45,6 +50,7 @@ def main(argv=None):
     uniq, target = np.unique(pool.sid[te], return_inverse=True)
     res = retrieval_metrics(Z, bank.emb[uniq], target)
     res.update(semantic_similarity(Z, bank.emb[uniq], target))
+    res.update(within_run_metrics(Z @ bank.emb[uniq].T, target, pool.sess[te]))
     cent = category_centroids(bank, pool)
     if cent is not None:
         res.update(zero_shot_category(Z, cent, pool.cat[te]))

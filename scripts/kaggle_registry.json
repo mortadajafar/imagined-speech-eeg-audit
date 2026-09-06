@@ -1,22 +1,140 @@
 {
-  "_comment": "Data sources for each script when pushed as a Kaggle script kernel. Datasets: eegsem-wheel (this package), chisco-meta (text maps, channel names, COFETT lists, montage), eegsem-weights (LaBraM/CBraMod checkpoints), brainmosaic-src (public BrainMosaic code). Kernel outputs: per-participant caches and the text bank.",
-  "defaults": {"owner": "mortadajafar", "gpu": true, "internet": false, "accelerator": "NvidiaTeslaT4",
-               "datasets": ["eegsem-wheel", "chisco-meta"],
-               "caches": ["chisco-cache-sub01", "chisco-cache-sub02", "chisco-cache-sub03", "chisco-cache-sub04", "chisco-cache-sub05", "chisco-textbank"]},
-  "build_chisco_cache.py":      {"gpu": false, "caches": [], "datasets": ["eegsem-wheel", "chisco-meta"], "external": ["shahryarnamdari/chisco-is-sub{S}", "shahryarnamdari/chisco-reading-sub{S}"], "args": "--subject {S}"},
-  "build_cofett_cache.py":      {"gpu": false, "internet": true, "caches": [], "args": "--subject {S}"},
-  "build_text_bank.py":         {"gpu": false, "internet": true, "caches": []},
-  "in_subject_decoding.py":     {},
-  "foundation_models.py":       {"datasets": ["eegsem-wheel", "chisco-meta", "eegsem-weights"]},
-  "cross_subject.py":           {},
-  "reading_to_imagining.py":    {},
-  "cofett_transfer.py":         {"caches": ["chisco-cache-sub01", "chisco-cache-sub02", "chisco-cache-sub03", "chisco-cache-sub04", "chisco-cache-sub05", "chisco-textbank", "cofett-cache-sub01", "cofett-cache-sub02"]},
-  "within_run_controls.py":     {"caches": ["chisco-cache-sub01", "chisco-cache-sub02", "chisco-cache-sub03", "chisco-cache-sub04", "chisco-cache-sub05", "chisco-textbank", "cofett-cache-sub01", "cofett-cache-sub02"]},
-  "per_run_normalisation.py":   {"caches": ["chisco-cache-sub01", "chisco-cache-sub02", "chisco-cache-sub03", "chisco-cache-sub04", "chisco-cache-sub05", "chisco-textbank", "cofett-cache-sub01", "cofett-cache-sub02"]},
-  "leave_runs_out.py":          {"caches": ["chisco-cache-sub01", "chisco-cache-sub02", "chisco-cache-sub03", "chisco-cache-sub04", "chisco-cache-sub05", "chisco-textbank", "cofett-cache-sub01", "cofett-cache-sub02"], "args": "--mode day"},
-  "mechanism_probes.py":        {},
-  "no_eeg_baselines.py":        {"gpu": false, "caches": ["chisco-cache-sub01", "chisco-cache-sub02", "chisco-cache-sub03", "chisco-cache-sub04", "chisco-cache-sub05", "chisco-textbank", "cofett-cache-sub01", "cofett-cache-sub02"]},
-  "embedding_robustness.py":    {},
-  "brainmosaic_reimplementation.py": {"internet": true, "datasets": ["eegsem-wheel", "chisco-meta", "brainmosaic-src"]},
-  "design_checks.py":           {"gpu": false}
+ "_comment": "Data sources for each script when pushed as a Kaggle script kernel. Datasets: eegsem-wheel (this package), chisco-meta (text maps, channel names, COFETT lists, montage), eegsem-weights (LaBraM/CBraMod checkpoints), brainmosaic-src (public BrainMosaic code). Kernel outputs: per-participant caches and the text bank.",
+ "defaults": {
+  "owner": "mortadajafar",
+  "gpu": true,
+  "internet": false,
+  "accelerator": "NvidiaTeslaT4",
+  "datasets": [
+   "eegsem-wheel",
+   "chisco-meta"
+  ],
+  "caches": [
+   "chisco-cache-sub01",
+   "chisco-cache-sub02",
+   "chisco-cache-sub03",
+   "chisco-cache-sub04",
+   "chisco-cache-sub05",
+   "chisco-textbank"
+  ]
+ },
+ "build_chisco_cache.py": {
+  "gpu": false,
+  "caches": [],
+  "datasets": [
+   "eegsem-wheel",
+   "chisco-meta"
+  ],
+  "external": [
+   "shahryarnamdari/chisco-is-sub{S}",
+   "shahryarnamdari/chisco-reading-sub{S}"
+  ],
+  "args": "--subject {S}"
+ },
+ "build_cofett_cache.py": {
+  "gpu": false,
+  "internet": true,
+  "caches": [],
+  "args": "--subject {S}"
+ },
+ "build_text_bank.py": {
+  "gpu": false,
+  "internet": true,
+  "caches": []
+ },
+ "in_subject_decoding.py": {},
+ "foundation_models.py": {
+  "datasets": [
+   "eegsem-wheel",
+   "chisco-meta",
+   "eegsem-weights"
+  ]
+ },
+ "cross_subject.py": {},
+ "reading_to_imagining.py": {},
+ "cofett_transfer.py": {
+  "caches": [
+   "chisco-cache-sub01",
+   "chisco-cache-sub02",
+   "chisco-cache-sub03",
+   "chisco-cache-sub04",
+   "chisco-cache-sub05",
+   "chisco-textbank",
+   "cofett-cache-sub01",
+   "cofett-cache-sub02"
+  ]
+ },
+ "within_run_controls.py": {
+  "caches": [
+   "chisco-cache-sub01",
+   "chisco-cache-sub02",
+   "chisco-cache-sub03",
+   "chisco-cache-sub04",
+   "chisco-cache-sub05",
+   "chisco-textbank",
+   "cofett-cache-sub01",
+   "cofett-cache-sub02"
+  ]
+ },
+ "per_run_normalisation.py": {
+  "caches": [
+   "chisco-cache-sub01",
+   "chisco-cache-sub02",
+   "chisco-cache-sub03",
+   "chisco-cache-sub04",
+   "chisco-cache-sub05",
+   "chisco-textbank",
+   "cofett-cache-sub01",
+   "cofett-cache-sub02"
+  ]
+ },
+ "leave_runs_out.py": {
+  "caches": [
+   "chisco-cache-sub01",
+   "chisco-cache-sub02",
+   "chisco-cache-sub03",
+   "chisco-cache-sub04",
+   "chisco-cache-sub05",
+   "chisco-textbank",
+   "cofett-cache-sub01",
+   "cofett-cache-sub02"
+  ],
+  "args": "--mode day"
+ },
+ "mechanism_probes.py": {},
+ "no_eeg_baselines.py": {
+  "gpu": false,
+  "caches": [
+   "chisco-cache-sub01",
+   "chisco-cache-sub02",
+   "chisco-cache-sub03",
+   "chisco-cache-sub04",
+   "chisco-cache-sub05",
+   "chisco-textbank",
+   "cofett-cache-sub01",
+   "cofett-cache-sub02"
+  ]
+ },
+ "embedding_robustness.py": {},
+ "brainmosaic_reimplementation.py": {
+  "internet": true,
+  "datasets": [
+   "eegsem-wheel",
+   "chisco-meta",
+   "brainmosaic-src"
+  ]
+ },
+ "design_checks.py": {
+  "gpu": false
+ },
+ "within_run_permutation.py": {
+  "caches": [
+   "chisco-cache-sub01",
+   "chisco-cache-sub02",
+   "chisco-cache-sub03",
+   "chisco-cache-sub04",
+   "chisco-cache-sub05",
+   "chisco-textbank"
+  ]
+ }
 }

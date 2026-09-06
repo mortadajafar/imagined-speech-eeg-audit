@@ -346,6 +346,13 @@ def train_one(
     if args.permute:  # control: break EEG<->sentence pairing in TRAIN only
         rng = np.random.default_rng(args.seed + 1000)
         sid_all[train_idx] = rng.permutation(sid_all[train_idx])
+    if (
+        args.permute_within_run
+    ):  # control: break the pairing but keep every run's set of sentences (TRAIN only)
+        rng = np.random.default_rng(args.seed + 2000)
+        for r in np.unique(pool.sess[train_idx]):
+            ii = train_idx[pool.sess[train_idx] == r]
+            sid_all[ii] = rng.permutation(sid_all[ii])
     best, best_state, bad = -1, None, 0
     for ep in range(args.epochs):
         model.train()
@@ -434,6 +441,7 @@ def main(argv=None):
     ap.add_argument("--fs", type=int, default=250)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--permute", action="store_true")
+    ap.add_argument("--permute_within_run", action="store_true")
     ap.add_argument(
         "--train_frac", type=float, default=1.0, help="data-scaling: fraction of train trials"
     )
@@ -570,7 +578,7 @@ def main(argv=None):
     os.makedirs(args.out, exist_ok=True)
     name = (
         args.tag
-        or f"{args.encoder}_{args.phase}->{test_phase}_tr{''.join(map(str,train_subjects))}_te{''.join(map(str,test_subjects))}_fs{args.few_shot}_s{args.seed}{'_perm' if args.permute else ''}"
+        or f"{args.encoder}_{args.phase}->{test_phase}_tr{''.join(map(str,train_subjects))}_te{''.join(map(str,test_subjects))}_fs{args.few_shot}_s{args.seed}{'_perm' if args.permute else ''}{'_permrun' if args.permute_within_run else ''}"
     )
     ks = args.few_shot_list if (cross_subject and args.few_shot_list) else [args.few_shot]
     base_state = copy.deepcopy(model.state_dict())

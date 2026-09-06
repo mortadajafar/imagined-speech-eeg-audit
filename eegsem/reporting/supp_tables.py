@@ -605,7 +605,7 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
         [
             s_.replace("sub", "S"),
             f"{r['pool']:.1f}",
-            pct(1 / r["pool"]),
+            pct(r["chance"]),
             pct(r["same"]),
             pct(r["size"]),
             pct(r["sem"]),

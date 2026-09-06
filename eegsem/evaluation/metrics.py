@@ -54,3 +54,32 @@ def semantic_similarity(z_eeg, z_pool, target_idx):
     """cos(text emb of retrieved top-1, text emb of true sentence) — 1.0 means exact hit."""
     top1 = (z_eeg @ z_pool.T).argmax(1)
     return {"sem_sim_top1": float((z_pool[top1] * z_pool[target_idx]).sum(1).mean())}
+
+
+def within_run_metrics(S, target, ses, min_pool=5):
+    """Retrieval restricted to the test sentences of the trial's own run.
+
+    S [N, U]: scores of each trial against the U unique test sentences; target [N]: column of the true
+    sentence; ses [N]: run id. Pools with fewer than ``min_pool`` candidates are skipped, a tie never counts
+    against the target, and chance is the per-trial 1/pool averaged over the retained trials.
+    """
+    ranks = []
+    for i in range(len(target)):
+        cand = np.unique(target[ses == ses[i]])
+        if len(cand) < min_pool:
+            continue
+        r = int((S[i, cand] > S[i, target[i]]).sum()) + 1
+        ranks.append((r, len(cand)))
+    if not ranks:
+        return {}
+    rk = np.array([r for r, _ in ranks], float)
+    n = np.array([m for _, m in ranks], float)
+    return {
+        "ws_top1": float((rk <= 1).mean()),
+        "ws_top5": float((rk <= 5).mean()),
+        "ws_mrr": float((1 / rk).mean()),
+        "ws_chance_top1": float((1 / n).mean()),
+        "ws_chance_top5": float(np.minimum(5 / n, 1).mean()),
+        "ws_mean_pool": float(n.mean()),
+        "ws_n": int(len(rk)),
+    }
