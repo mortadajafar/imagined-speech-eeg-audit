@@ -1,6 +1,7 @@
 """Generate supplementary LaTeX tables from kaggle/logs summaries -> paper/tex/supp_tables.tex"""
 
-import json, glob, os, re, numpy as np
+import collections, glob, json, os, re
+import numpy as np
 
 
 def load(pat):
@@ -554,6 +555,82 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
             ],
             rows,
             "tab:s12",
+        )
+    )
+    # S15: trial accounting per participant (from the leave-one-day-out predictions, which cover every trial)
+
+    per = collections.defaultdict(list)
+    for f in sorted(glob.glob(logs_dir + "/e12c/**/e12c_lodo_*_preds.json", recursive=True)):
+        s_, d = re.search(r"sub0\d", f).group(0), int(re.search(r"day(\d)", f).group(1))
+        per[s_] += [(d, r["run"], r["true"]) for r in json.load(open(f))]
+    rows = []
+    for s_ in sorted(per):
+        tr = per[s_]
+        day_of = collections.defaultdict(set)
+        for d, _, t in tr:
+            day_of[t].add(d)
+        n_uni = len({t for _, _, t in tr})
+        rows.append(
+            [
+                s_.replace("sub", "S"),
+                str(len(tr)),
+                str(len({r for _, r, _ in tr})),
+                str(n_uni),
+                str(len(tr) - n_uni),
+                str(sum(1 for d, _, t in tr if len(day_of[t]) > 1)),
+            ]
+        )
+    out.append(
+        tab(
+            "Trial accounting per Chisco participant after artefact rejection: recall trials used in all experiments, blocks with surviving trials, unique sentence texts, trials repeating a text already presented to the same participant, and trials whose text also occurs on another recording day (relevant to leave-runs-out folds only; the sentence-disjoint split is by text).",
+            [
+                "participant",
+                "trials",
+                "blocks",
+                "unique texts",
+                "repeat trials",
+                "cross-day repeats",
+            ],
+            rows,
+            "tab:s13",
+        )
+    )
+    # S16: similarity-matched cross-run distractors
+    mp = (
+        json.load(open("notes/matched_pools.json"))
+        if os.path.exists("notes/matched_pools.json")
+        else {}
+    )
+    rows = [
+        [
+            s_.replace("sub", "S"),
+            f"{r['pool']:.1f}",
+            pct(1 / r["pool"]),
+            pct(r["same"]),
+            pct(r["size"]),
+            pct(r["sem"]),
+            f"{r['sim_same']:.3f}",
+            f"{r['sim_size']:.3f}",
+            f"{r['sim_sem']:.3f}",
+        ]
+        for s_, r in sorted(mp.items())
+    ]
+    out.append(
+        tab(
+            "Same-run vs.\\ other-run distractors matched on semantic similarity (EEGNet seed 0, test trials, LaBSE space). Other-run pools have the same size as the same-run pool; the similarity-matched pool picks for each same-run distractor the other-run test sentence whose cosine similarity to the target is closest. Last three columns: mean cosine similarity between target and distractors.",
+            [
+                "participant",
+                "pool",
+                "chance",
+                "same-run",
+                "other-run, size",
+                "other-run, similarity",
+                "sim same",
+                "sim size",
+                "sim matched",
+            ],
+            rows,
+            "tab:s14",
         )
     )
     open(out_path, "w", encoding="utf-8").write("\n".join(out))
