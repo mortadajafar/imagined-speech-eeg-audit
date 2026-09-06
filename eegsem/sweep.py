@@ -1,4 +1,4 @@
-"""Shared helpers for the experiment scripts: Kaggle setup, result bookkeeping."""
+"""Shared helpers for the experiment sweeps: Kaggle input resolution and result bookkeeping."""
 
 import json
 import os

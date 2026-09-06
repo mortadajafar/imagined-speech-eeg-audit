@@ -26,7 +26,7 @@ except ImportError:  # Kaggle: the package wheel is attached as a dataset
     )
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _common import Summary, kaggle_inputs, retrieval_fields  # noqa: E402
+from eegsem.sweep import Summary, kaggle_inputs, retrieval_fields  # noqa: E402
 from eegsem import training
 from eegsem.analysis.probes import run_probe
 

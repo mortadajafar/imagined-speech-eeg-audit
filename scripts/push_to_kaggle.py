@@ -50,7 +50,6 @@ def main():
         open(path, "w").write(
             f"import sys; sys.argv[1:] = {script_args!r}  # set by push_to_kaggle.py\n" + body
         )
-    shutil.copy(os.path.join(HERE, "_common.py"), work)
     metadata = {
         "id": f"{opts.owner or owner}/{opts.name}",
         "title": opts.name,

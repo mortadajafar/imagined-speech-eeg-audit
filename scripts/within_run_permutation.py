@@ -25,7 +25,7 @@ except ImportError:  # Kaggle: the package wheel is attached as a dataset
         check=True,
     )
 
-from _common import Summary, kaggle_inputs, retrieval_fields  # noqa: E402
+from eegsem.sweep import Summary, kaggle_inputs, retrieval_fields  # noqa: E402
 from eegsem import ridge, training
 
 # E15a. (i) EEGNet trained with sentence labels permuted WITHIN each run: the pairing between epoch and
