@@ -475,6 +475,12 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
             "kaggle/e14_design",
             "deterministic",
         ],
+        [
+            "E15",
+            "labels permuted within run (3 seeds), ridge within-run metrics, LaBraM-frozen/CBraMod within-run metrics",
+            "kaggle/e15a_permrun, e15b_fm_withinrun",
+            "0,1,2 (permutations); 0",
+        ],
     ]
     out.insert(
         0,
@@ -631,6 +637,116 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
             ],
             rows,
             "tab:s14",
+        )
+    )
+    # S17: within-run retrieval for every model of Table I; S18: labels permuted within run (E15a)
+    e15a = [
+        r
+        for r in load(logs_dir + "/e15a/**/summary_within_run_permutation.json")
+        if not r.get("error")
+    ]
+    e15b = [
+        r for r in load(logs_dir + "/e15b/**/summary_foundation_models.json") if not r.get("error")
+    ]
+    e10 = [r for r in load(logs_dir + "/e10/**/summary_e10.json") if not r.get("error")]
+    e7 = {r["tag"]: r for r in load(logs_dir + "/e7_controls/**/summary_e7.json")}
+    rows = []
+    for s_ in ["sub01", "sub02", "sub03", "sub04", "sub05"]:
+        S = s_.replace("sub", "S")
+        rr = [r for r in e15a if r.get("kind") == "ridge_within_run" and r["sub"] == s_]
+        if rr:
+            rows.append(
+                [
+                    S,
+                    "ridge",
+                    pct(rr[0]["ws_top1"]),
+                    pct(rr[0]["ws_chance_top1"]),
+                    f"{100*(rr[0]['ws_top1']-rr[0]['ws_chance_top1']):+.1f}",
+                ]
+            )
+        if f"e7_chisco_{s_}" in e7:
+            r0 = e7[f"e7_chisco_{s_}"]
+            ex = [r for r in e12c if "insub" in r["tag"] and r["tag"].split("_")[2] == s_]
+            w = np.mean([r0["ws_top1"]] + [r["ws_top1"] for r in ex])
+            rows.append(
+                [
+                    S,
+                    "EEGNet (3 seeds)",
+                    pct(w),
+                    pct(r0["ws_chance_top1"]),
+                    f"{100*(w-r0['ws_chance_top1']):+.1f}",
+                ]
+            )
+        for name, cond in [("Conformer", "e10_conformer_"), ("LaBraM fine-tuned", "e10_labram_")]:
+            R = [r for r in e10 if r["tag"] == cond + s_]
+            if R:
+                rows.append(
+                    [
+                        S,
+                        name,
+                        pct(R[0]["ws_top1"]),
+                        pct(R[0]["ws_chance_top1"]),
+                        f"{100*(R[0]['ws_top1']-R[0]['ws_chance_top1']):+.1f}",
+                    ]
+                )
+        for name, cond in [
+            ("LaBraM frozen", "labram_frozen_"),
+            ("CBraMod fine-tuned", "cbramod62_finetuned_"),
+        ]:
+            R = [r for r in e15b if r["tag"] == cond + s_]
+            if R:
+                rows.append(
+                    [
+                        S,
+                        name,
+                        pct(R[0]["ws_top1"]),
+                        pct(R[0]["ws_chance_top1"]),
+                        f"{100*(R[0]['ws_top1']-R[0]['ws_chance_top1']):+.1f}",
+                    ]
+                )
+    out.append(
+        tab(
+            "Within-run top-1 retrieval (candidates = test sentences of the same run) for every decoder of Table I (E7, E10, E12c, E15).",
+            ["participant", "model", "within-run top-1", "chance", "difference"],
+            rows,
+            "tab:s17",
+        )
+    )
+    rows = [
+        [
+            r["sub"].replace("sub", "S"),
+            str(r["seed"]),
+            pct(r["top1_pool100"]),
+            pct(r["top10"]),
+            f"{r['mrr']:.3f}",
+            f"{r['rank_pct']:.3f}",
+            pct(r["cat"]),
+            pct(r["ws_top1"]),
+            pct(r["ws_chance_top1"]),
+            pct(r["xs_matched_top1"]),
+            pct(r["noise_top1_pool100"]),
+        ]
+        for r in e15a
+        if r.get("kind") == "permute_within_run"
+    ]
+    out.append(
+        tab(
+            "EEGNet trained with sentence labels permuted within each run (E15a): every run keeps its set of sentences but no epoch is paired with its own sentence. Three permutations per participant; test labels are the true ones.",
+            [
+                "participant",
+                "perm.",
+                "p100",
+                "top-10",
+                "MRR",
+                "rank pct",
+                "cat",
+                "within-run top-1",
+                "chance",
+                "matched other-run",
+                "noise p100",
+            ],
+            rows,
+            "tab:s18",
         )
     )
     open(out_path, "w", encoding="utf-8").write("\n".join(out))

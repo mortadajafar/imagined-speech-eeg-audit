@@ -411,6 +411,18 @@ def fig_mechanism(out="paper/figures/audit_fig5_mechanism"):
     loro = {
         s: np.mean([r["top1_pool100"] for r in e12 if r["tag"].split("_")[1] == s]) for s in subs
     }
+    e15a = [
+        r
+        for r in json.load(
+            open(
+                glob.glob(
+                    "kaggle/logs/e15a/**/summary_within_run_permutation.json", recursive=True
+                )[0]
+            )
+        )
+        if r.get("kind") == "permute_within_run"
+    ]
+    permrun = {s: np.mean([r["top1_pool100"] for r in e15a if r["sub"] == s]) for s in subs}
     lodo = {
         s: np.mean(
             [r["top1_pool100"] for r in e12c if "lodo" in r["tag"] and r["tag"].split("_")[2] == s]
@@ -418,7 +430,7 @@ def fig_mechanism(out="paper/figures/audit_fig5_mechanism"):
         for s in subs
     }
     x = np.arange(5)
-    fig, axes = plt.subplots(1, 2, figsize=(7.4, 3.0), gridspec_kw={"width_ratios": [1.0, 1.35]})
+    fig, axes = plt.subplots(1, 2, figsize=(7.6, 3.0), gridspec_kw={"width_ratios": [1.0, 1.5]})
     ax = axes[0]
     w = 0.27
     b1 = ax.bar(
@@ -461,6 +473,7 @@ def fig_mechanism(out="paper/figures/audit_fig5_mechanism"):
     ax = axes[1]
     conds = [
         "full pool",
+        "labels\npermuted\nwithin run",
         "matched,\nother-run",
         "matched,\nsame-run",
         "leave-\nruns-out",
@@ -469,6 +482,7 @@ def fig_mechanism(out="paper/figures/audit_fig5_mechanism"):
     vals = np.array(
         [
             [p100[s] / 0.01 for s in subs],
+            [permrun[s] / 0.01 for s in subs],
             [matched[s] / chance[s] for s in subs],
             [within[s] / chance[s] for s in subs],
             [loro[s] / 0.01 for s in subs],
@@ -477,18 +491,18 @@ def fig_mechanism(out="paper/figures/audit_fig5_mechanism"):
     )
     m = vals.mean(1)
     sd = vals.std(1, ddof=1)
-    xx = np.arange(5)
+    xx = np.arange(6)
     ax.bar(
         xx,
         m,
         0.6,
-        color=[C["eeg"], C["eeg"], "#a8a7a3", "#a8a7a3", "#a8a7a3"],
+        color=[C["eeg"], "#8fb8ea", C["eeg"], "#a8a7a3", "#a8a7a3", "#a8a7a3"],
         yerr=sd,
         error_kw=dict(ecolor=INK2, lw=0.8, capsize=2),
         zorder=2,
     )
     rng = np.random.default_rng(0)
-    for k in range(5):
+    for k in range(6):
         ax.scatter(
             xx[k] + rng.uniform(-0.15, 0.15, 5),
             vals[k],
