@@ -731,7 +731,7 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
     ]
     out.append(
         tab(
-            "EEGNet trained with sentence labels permuted within each run (E15a): every run keeps its set of sentences but no epoch is paired with its own sentence. Three permutations per participant; test labels are the true ones.",
+            "EEGNet trained with sentence labels permuted within each run (E15a): training labels randomly permuted within each run, preserving each run's label set (on average one trial per run keeps its own label). Three permutations per participant; test labels are the true ones.",
             [
                 "participant",
                 "perm.",
