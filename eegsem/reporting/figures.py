@@ -229,7 +229,7 @@ def fig_order_structure(out):
     ch_hi = [max(per_run[r]) for r in sorted(per_run)]
     cof = json.load(open("data/chisco_meta/cofett_sentences.json", encoding="utf-8"))
     cf = [H([tm.get(s, -1) for s in cof[k]]) for k in ["text1-1", "text1-2", "text1-3", "text1-4"]]
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.8))
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.6))
     ax = axes[0]
     ax.bar(
         np.arange(len(ch)),
@@ -331,7 +331,7 @@ def fig_occlusion(
         "B": "reading-trained, tested on imagined",
         "C": "reading-pretrained + fine-tuned",
     }
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.0), gridspec_kw={"width_ratios": [1, 1.3]})
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.85), gridspec_kw={"width_ratios": [1, 1.3]})
     ax = axes[0]
     handles = []
     for c in "ABC":
@@ -456,7 +456,7 @@ def fig_mechanism(out="paper/figures/audit_fig5_mechanism"):
         for s in subs
     }
     x = np.arange(5)
-    fig, axes = plt.subplots(1, 2, figsize=(7.6, 2.85), gridspec_kw={"width_ratios": [1.0, 1.5]})
+    fig, axes = plt.subplots(1, 2, figsize=(7.6, 2.7), gridspec_kw={"width_ratios": [1.0, 1.5]})
     ax = axes[0]
     w = 0.27
     b1 = ax.bar(
