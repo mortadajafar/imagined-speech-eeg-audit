@@ -16,6 +16,7 @@ def fetch(url, dst, log=print):
     if os.path.exists(dst):
         return dst
     t0 = time.time()
+    os.makedirs(os.path.dirname(dst) or ".", exist_ok=True)
     with urllib.request.urlopen(url, timeout=120) as r, open(dst + ".part", "wb") as f:
         n = 0
         while True:
