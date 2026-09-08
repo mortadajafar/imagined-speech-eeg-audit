@@ -54,11 +54,23 @@ def build_cache(
     up //= g
     down //= g
     X_parts, meta = [], []
+    seen_digest = {}
     t0 = time.time()
     for fi, f in enumerate(files):
+        if os.path.getsize(f) == 0:
+            raise ValueError(f"{f} is empty")
         with open(f, "rb") as fh:
             trials = pickle.load(fh)
         rid = run_id(f)
+        # ds005170 ships sub-05 run-011 as a byte-identical copy of run-010; flag any such repeat
+        import hashlib
+
+        digest = hashlib.md5(open(f, "rb").read(1 << 22)).hexdigest()
+        if digest in seen_digest:
+            print(
+                f"WARNING: run {rid} has the same content as run {seen_digest[digest]} (duplicate file)"
+            )
+        seen_digest[digest] = rid
         arrs = []
         for pos, tr in enumerate(trials):
             a = np.asarray(tr["input_features"])

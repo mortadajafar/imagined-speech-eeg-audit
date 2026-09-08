@@ -108,11 +108,13 @@ def process_run(
             raw = EOGRegression(picks="eeg", picks_artifact="eog").fit(raw).apply(raw)
             log("EOG regression applied")
         except Exception as e:
-            log("EOG regression skipped:", e)
+            raise RuntimeError(f"EOG regression failed for {events_path}: {e}") from e
     raw.resample(fs_out)
     tr = trials_from_events(load_events(events_path))
-    if len(tr) != len(sentences):
-        log(f"WARNING: {len(tr)} trials vs {len(sentences)} sentences -> truncating to min")
+    if len(tr) != len(
+        sentences
+    ):  # a missing event would shift every later label: refuse rather than truncate
+        raise ValueError(f"{events_path}: {len(tr)} recall events vs {len(sentences)} sentences")
     n = min(len(tr), len(sentences))
     T = int(round(win_s * fs_out))
     X = np.zeros((n, len(ch_order), T), np.float16)

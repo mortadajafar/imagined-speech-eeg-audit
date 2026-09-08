@@ -749,6 +749,40 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
             "tab:s18",
         )
     )
+    # S19: sensitivity of the headline statistics to participant S05, whose block 11 duplicates block 10 in ds005170
+    sens = (
+        json.load(open("notes/s05_sensitivity.json"))
+        if os.path.exists("notes/s05_sensitivity.json")
+        else {}
+    )
+    rows = [
+        [
+            k.replace("_", " "),
+            f"{v['tost_mean']:+.2f}",
+            f"[{v['ci90'][0]:+.2f}, {v['ci90'][1]:+.2f}]",
+            f"{v['p_max']:.3f}",
+            pct(v["perm_retention"]),
+            pct(v["lodo_p100"] / 100, 2),
+            f"{v['matched_other_run']:.1f}",
+        ]
+        for k, v in sens.items()
+    ]
+    out.append(
+        tab(
+            "Sensitivity to S05 (whose block 11 is a byte-identical copy of block 10 in the OpenNeuro derivative): EEGNet within-run difference from chance (three seeds; TOST margin $\\pm$1 point), accuracy retained under within-run label permutation, leave-one-day-out pool-100 top-1 and matched other-run top-1, with all five participants and with S05 excluded.",
+            [
+                "participants",
+                "within-run $-$ chance (pts)",
+                "90\\% CI",
+                "max TOST $p$",
+                "retained (\\%)",
+                "leave-one-day-out p100",
+                "matched other-run",
+            ],
+            rows,
+            "tab:s19",
+        )
+    )
     open(out_path, "w", encoding="utf-8").write("\n".join(out))
     print("supp_tables.tex written with", len(out), "tables")
 

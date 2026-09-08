@@ -41,6 +41,9 @@ def load_runs(logs_dir):
                     train_subjects=str(a.get("train_subjects")),
                     seed=a.get("seed", 0),
                     permute=bool(a.get("permute")),
+                    permute_within_run=bool(a.get("permute_within_run")),
+                    fm_lr_mult=a.get("fm_lr_mult"),
+                    norm=a.get("norm"),
                     train_frac=a.get("train_frac", 1.0),
                     few_shot=(
                         int(re.search(r"_k(\d+)", key).group(1))

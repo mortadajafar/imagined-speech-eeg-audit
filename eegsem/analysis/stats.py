@@ -183,40 +183,42 @@ def tost_equivalence(diffs, margin):
     )
 
 
-def hierarchical_bootstrap(preds_files, metric="within_run_top1", n_boot=2000, seed=0):
-    """preds_files: {participant: path to *_preds.json with per-trial 'rank', 'run' (and within-run rank if available)}.
-    Resamples participants, then runs within participant, then trials within run; returns bootstrap CI of the mean metric.
+def hierarchical_bootstrap(preds_files, metric="mrr", n_boot=2000, seed=0, rank_key="rank"):
+    """Hierarchical bootstrap CI of a retrieval metric: resample participants, then runs within participant,
+    then trials within run. preds_files: {participant: path to *_preds.json} with per-trial ``rank_key`` and
+    'run'. metric: 'top1', 'top5', 'top10' or 'mrr' (of the stored rank; pass rank_key='ws_rank' for within-run
+    ranks if the file stores them). Participants are summarised first so that each carries equal weight.
     """
+    if metric not in ("top1", "top5", "top10", "mrr"):
+        raise ValueError(f"unknown metric {metric!r}")
+    k = {"top1": 1, "top5": 5, "top10": 10}.get(metric)
+    score = (lambda r: 1.0 / r) if metric == "mrr" else (lambda r: 1.0 if r <= k else 0.0)
     rng = np.random.default_rng(seed)
     data = {}
     for p, f in preds_files.items():
-        d = json.load(open(f))
         by_run = defaultdict(list)
-        for x in d:
-            by_run[x.get("run", 0)].append(x)
-        data[p] = {
-            r: (
-                np.array([1.0 if x["rank"] <= 10 else 0.0 for x in xs])
-                if metric == "top10"
-                else np.array([1.0 / x["rank"] for x in xs])
-            )
-            for r, xs in by_run.items()
-        }
+        for x in json.load(open(f)):
+            if rank_key in x:
+                by_run[x.get("run", 0)].append(score(x[rank_key]))
+        data[p] = {r: np.array(v) for r, v in by_run.items() if len(v)}
     parts = list(data)
-    vals = []
+    point = float(np.mean([np.mean([v.mean() for v in data[p].values()]) for p in parts]))
+    boots = []
     for _ in range(n_boot):
         ps = rng.choice(parts, len(parts), replace=True)
-        acc = []
+        vals = []
         for p in ps:
             runs = list(data[p])
             rs = rng.choice(runs, len(runs), replace=True)
-            for r in rs:
-                t = data[p][r]
-                acc.append(rng.choice(t, len(t), replace=True).mean())
-        vals.append(np.mean(acc))
+            vals.append(
+                np.mean([rng.choice(data[p][r], len(data[p][r]), replace=True).mean() for r in rs])
+            )
+        boots.append(np.mean(vals))
+    lo, hi = np.percentile(boots, [2.5, 97.5])
     return dict(
         metric=metric,
-        mean=float(np.mean(vals)),
-        ci95=(float(np.percentile(vals, 2.5)), float(np.percentile(vals, 97.5))),
+        mean=point,
+        ci95=(float(lo), float(hi)),
+        n_participants=len(parts),
         n_boot=n_boot,
     )

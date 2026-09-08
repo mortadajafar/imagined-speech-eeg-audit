@@ -211,25 +211,41 @@ def fig_order_structure(out):
         p /= p.sum()
         return -(p * np.log2(p)).sum()
 
-    ch = []
-    for f in sorted(
-        glob.glob("data/chisco_meta/textdataset/split_data_*.xlsx"),
-        key=lambda x: int(x.split("_")[-1].split(".")[0]),
-    ):
-        df = pd.read_excel(f)
-        ch.append(H([tm.get(" ".join(str(s).split()), -1) for s in df[df.columns[0]]]))
+    # category sequence of every run actually presented to every participant (the leave-one-day-out
+    # prediction files together cover all retained trials)
+    import re
+
+    runs = collections.defaultdict(list)
+    for f in glob.glob("kaggle/logs/e12c/results/e12c_lodo_sub0?_day?_k0_sub0_preds.json"):
+        sub = re.search(r"sub0\d", f).group(0)
+        for r in json.load(open(f)):
+            if r["cat"] >= 0:
+                runs[(sub, r["run"])].append(r["cat"])
+    per_run = collections.defaultdict(list)
+    for (sub, run), cats in runs.items():
+        per_run[run].append(H(cats))
+    ch = [np.mean(per_run[r]) for r in sorted(per_run)]
+    ch_lo = [min(per_run[r]) for r in sorted(per_run)]
+    ch_hi = [max(per_run[r]) for r in sorted(per_run)]
     cof = json.load(open("data/chisco_meta/cofett_sentences.json", encoding="utf-8"))
     cf = [H([tm.get(s, -1) for s in cof[k]]) for k in ["text1-1", "text1-2", "text1-3", "text1-4"]]
     fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.8))
     ax = axes[0]
-    ax.bar(np.arange(len(ch)), ch, color=C["eeg"], width=0.8, label="Chisco block lists")
+    ax.bar(
+        np.arange(len(ch)),
+        ch,
+        color=C["eeg"],
+        width=0.8,
+        label="Chisco blocks (mean over participants; bars = range)",
+    )
+    ax.vlines(np.arange(len(ch)), ch_lo, ch_hi, color=INK2, lw=0.8)
     ax.bar(len(ch) + 1 + np.arange(4), cf, color=C["run"], width=0.8, label="COFETT day lists")
     ax.axhline(np.log2(39), color=INK2, lw=1, ls=(0, (4, 3)))
     ax.text(0, np.log2(39) + 0.15, "uniform over 39 categories (5.3 bits)", fontsize=7, color=INK2)
     ax.set_xticks([])
-    ax.set_xlabel("stimulus list (Chisco blocks, then COFETT days)", color=INK)
+    ax.set_xlabel("presented list (45 Chisco blocks, then 4 COFETT days)", color=INK)
     _style(ax, "Category entropy of list (bits)")
-    ax.legend(frameon=False, fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2)
+    ax.legend(frameon=False, fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.22), ncol=2)
     ax.set_ylim(0, 6)
     ax = axes[1]
     e8b = json.load(open(glob.glob("kaggle/logs/e8b/**/summary_e8b.json", recursive=True)[0]))
@@ -247,7 +263,7 @@ def fig_order_structure(out):
     ax.axhline(eeg, color=C["eeg"], lw=1.6, ls=(0, (6, 3)), label="EEGNet (EEG)")
     ax.set_xticks(range(3))
     ax.set_xticklabels(ks)
-    ax.set_xlabel("no-EEG predictor: neighbourhood in presentation order", color=INK)
+    ax.set_xlabel("no-EEG predictor (presentation-order neighbourhood)", color=INK)
     _style(ax, "Top-1, 100-sentence pool (%)", 1.0)
     ax.legend(frameon=False, fontsize=7, loc="upper left")
     fig.tight_layout()
@@ -295,10 +311,20 @@ def fig_occlusion(
             if cond is None:
                 continue
             base = o["baseline"]["mrr"]
+            part = re.search(r"sub0?(\d)", tag).group(
+                1
+            )  # participant index in either naming scheme
             for t in o["temporal"]:
-                occ[cond][("t", t["t_start"])].append(100 * (base - t["mrr"]) / base)
+                occ[cond][("t", t["t_start"])].append((part, 100 * (base - t["mrr"]) / base))
             for k, v in o["regions"].items():
-                occ[cond][("r", k)].append(100 * (base - v["mrr"]) / base)
+                occ[cond][("r", k)].append((part, 100 * (base - v["mrr"]) / base))
+    # the participant is the statistical unit: average the seeds of each participant first
+    for c in list(occ):
+        for k, vals in occ[c].items():
+            by = defaultdict(list)
+            for part, v in vals:
+                by[part].append(v)
+            occ[c][k] = [float(np.mean(v)) for v in by.values()]
     cols = {"A": C["eeg"], "B": C["run"], "C": C["pos3"]}
     labels = {
         "A": "imagined-only decoder",

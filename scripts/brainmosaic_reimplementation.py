@@ -51,9 +51,10 @@ subprocess.run(
     [
         sys.executable,
         "-c",
-        open(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), "brainmosaic_patch.py")
-        ).read(),
+        __import__("importlib.resources")
+        .resources.files("eegsem.models.vendor")
+        .joinpath("brainmosaic_patch.py")
+        .read_text(),
     ],
     check=True,
     cwd=REPO,

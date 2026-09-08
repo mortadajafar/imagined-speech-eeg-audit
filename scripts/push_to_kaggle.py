@@ -41,7 +41,9 @@ def main():
 
     work = tempfile.mkdtemp()
     shutil.copy(os.path.join(HERE, opts.script), work)
-    script_args = entry.get("args", "").split() + list(opts.script_args)
+    script_args = [fill(a) for a in entry.get("args", "").split() + list(opts.script_args)]
+    if "{S}" in json.dumps(entry) and not opts.subject:
+        sys.exit("this script needs --subject to fill {S} in its registry entry")
     if (
         script_args
     ):  # script kernels take no command line, so the arguments are written into the copy

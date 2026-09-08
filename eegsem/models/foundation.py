@@ -203,10 +203,15 @@ class LaBraMEncoder(nn.Module):
             sd = _strip_prefix(ck.get("model", ck), "student.")
             sd = {k: v for k, v in sd.items() if not k.startswith("head")}
             msg = self.net.load_state_dict(sd, strict=False)
+            n_loaded = len(set(sd) & set(self.net.state_dict()))
+            if n_loaded < 0.9 * len(self.net.state_dict()):
+                raise RuntimeError(
+                    f"LaBraM checkpoint covers only {n_loaded} of {len(self.net.state_dict())} tensors: {msg}"
+                )
+            print(f"LaBraM weights: {n_loaded}/{len(self.net.state_dict())} tensors loaded; {msg}")
             print("LaBraM weights:", msg)
         else:
-            print("LaBraM: NO pretrained weights found at", weights_path)
-        self.head = nn.Sequential(nn.LayerNorm(200), nn.Dropout(drop), nn.Linear(200, out_dim))
+            raise FileNotFoundError(f"LaBraM pretrained weights not found at {weights_path}")
         self.out_dim = out_dim
         self.n_channels_used = len(self.keep)
 
@@ -241,8 +246,7 @@ class CBraModEncoder(nn.Module):
             msg = self.net.load_state_dict(sd, strict=False)
             print("CBraMod weights:", msg)
         else:
-            print("CBraMod: NO pretrained weights found at", weights_path)
-        self.net.proj_out = nn.Identity()
+            raise FileNotFoundError(f"CBraMod pretrained weights not found at {weights_path}")
         self.head = nn.Sequential(nn.LayerNorm(200), nn.Dropout(drop), nn.Linear(200, out_dim))
         self.out_dim = out_dim
 

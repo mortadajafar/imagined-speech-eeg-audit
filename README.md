@@ -51,3 +51,7 @@ Chisco (OpenNeuro ds005170) and COFETT (OpenNeuro ds006317) are public. The Chis
 ## Licence
 
 MIT. Vendored model code: LaBraM and CBraMod (MIT). BrainMosaic is used from its public repository with the fixes in `scripts/brainmosaic_patch.py`.
+
+## Regenerating the paper's tables and figures
+
+`MANIFEST.md` maps every table and figure to the script and log folder that produce it and lists the commands that rebuild them from the saved summaries without retraining.

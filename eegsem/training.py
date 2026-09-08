@@ -356,6 +356,14 @@ def train_one(
     best, best_state, bad = -1, None, 0
     for ep in range(args.epochs):
         model.train()
+        if train_adapter_only and getattr(args, "freeze_bn_in_calibration", False):
+            for (
+                m
+            ) in (
+                model.modules()
+            ):  # adapter-only calibration: keep the backbone's BatchNorm statistics fixed
+                if isinstance(m, nn.modules.batchnorm._BatchNorm):
+                    m.eval()
         perm = np.random.permutation(train_idx)
         tl, nb = 0.0, 0
         for i in range(0, len(perm), args.bs):
@@ -442,6 +450,11 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--permute", action="store_true")
     ap.add_argument("--permute_within_run", action="store_true")
+    ap.add_argument(
+        "--freeze_bn_in_calibration",
+        action="store_true",
+        help="keep BatchNorm statistics fixed while only the adapter is trained",
+    )
     ap.add_argument(
         "--train_frac", type=float, default=1.0, help="data-scaling: fraction of train trials"
     )
