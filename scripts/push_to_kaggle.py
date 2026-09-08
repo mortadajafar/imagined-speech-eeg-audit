@@ -75,11 +75,12 @@ def main():
     if entry["gpu"]:
         metadata["machine_shape"] = entry["accelerator"]
     json.dump(metadata, open(os.path.join(work, "kernel-metadata.json"), "w"), indent=1)
-    cmd = ["kaggle", "kernels", "push", "-p", work]
-    if entry["gpu"]:
-        cmd += ["--accelerator", entry["accelerator"]]
-    print(" ".join(cmd))
-    subprocess.run(cmd, check=True)
+    # the kaggle package's Python API accepts the same kernel-metadata.json (machine_shape carries the accelerator)
+    from kaggle.api.kaggle_api_extended import KaggleApi
+
+    api = KaggleApi()
+    api.authenticate()
+    print(api.kernels_push(work))
     shutil.rmtree(work)
 
 

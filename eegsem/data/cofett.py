@@ -184,13 +184,8 @@ def build_cofett_cache(
                 fs_out,
                 textmaps=textmaps,
                 log=log,
-                meta_extra={
-                    "ses": int(
-                        ses,
-                        win_s=win_s,
-                    ),
-                    "run": int(run),
-                },
+                meta_extra={"ses": int(ses), "run": int(run)},
+                win_s=win_s,
             )
             Xs.append(X)
             meta += m
