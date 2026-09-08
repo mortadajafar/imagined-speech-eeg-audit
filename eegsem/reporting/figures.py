@@ -88,7 +88,7 @@ def fig_eeg_vs_noeeg(d, out):
             ],
         ),
     ]
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.9))
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.75))
     w = 0.8 / len(series)
     for ax, m, yl, ch in (
         (axes[0], "top1_pool100", "Top-1, 100-sentence pool (%)", 1.0),
