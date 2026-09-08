@@ -36,6 +36,7 @@ from eegsem.data.cofett import build_cofett_cache
 parser = argparse.ArgumentParser()
 parser.add_argument("--subject", required=True)
 parser.add_argument("--out", default=None)
+parser.add_argument("--win_s", type=float, default=3.3, help="epoch length after recall onset (s)")
 args = parser.parse_args()
 
 meta = paths.meta_dir()
@@ -56,4 +57,5 @@ build_cofett_cache(
     "/kaggle/tmp",
     fs_out=250,
     textmaps=textmaps,
+    win_s=args.win_s,
 )

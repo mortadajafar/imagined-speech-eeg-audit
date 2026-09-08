@@ -26,6 +26,11 @@ def main():
         help="Kaggle user who will own the kernel (default: registry owner)",
     )
     parser.add_argument(
+        "--caches",
+        default=None,
+        help="comma-separated kernel outputs to attach instead of the registry list",
+    )
+    parser.add_argument(
         "script_args", nargs="*", help="arguments appended to the script (after --)"
     )
     opts = parser.parse_args()
@@ -37,7 +42,7 @@ def main():
     datasets = [f"{owner}/{d}" for d in entry["datasets"]] + [
         fill(x) for x in entry.get("external", [])
     ]
-    kernels = [f"{owner}/{k}" for k in entry["caches"]]
+    kernels = [f"{owner}/{k}" for k in (opts.caches.split(",") if opts.caches else entry["caches"])]
 
     work = tempfile.mkdtemp()
     shutil.copy(os.path.join(HERE, opts.script), work)
