@@ -481,6 +481,12 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
             "kaggle/e15a_permrun, e15b_fm_withinrun",
             "0,1,2 (permutations); 0",
         ],
+        [
+            "E16",
+            "COFETT recall-window control (0--2 s epochs): in-subject with within-day metrics, held-out day",
+            "kaggle/e16_cofett_window (caches cofett2s)",
+            "0",
+        ],
     ]
     out.insert(
         0,
@@ -781,6 +787,61 @@ def main(logs_dir="kaggle/logs", out_path="paper/tex/supp_tables.tex"):
             ],
             rows,
             "tab:s19",
+        )
+    )
+    # S20: COFETT recall-window control (E16): 0-2 s window vs the 3.3 s Chisco-compatible window
+    e16 = [r for r in load(logs_dir + "/e16/**/summary_cofett_window.json") if not r.get("error")]
+    e12b = [r for r in load(logs_dir + "/e12b/**/summary*.json") if not r.get("error")]
+    rows = []
+    for s_ in ("cofett_sub01", "cofett_sub02"):
+        S = s_.replace("cofett_sub", "COFETT S")
+        r33 = e7.get(f"e7_cofett_{s_}")
+        d33 = [r["top1_pool100"] for r in e12b if s_.replace("cofett_", "") in r["tag"]]
+        r20 = [r for r in e16 if r.get("kind") == "in_subject" and r["sub"] == s_]
+        if r20:  # the summary keeps only top-1 within-day metrics; top-5 comes from the run file
+            full = glob.glob(logs_dir + f"/e16/**/win_within_run_{s_}.json", recursive=True)
+            if full:
+                ee = json.load(open(full[0]))["test"]["sub0"]["eeg"]
+                r20[0] = {
+                    **r20[0],
+                    "ws_top5": ee.get("ws_top5"),
+                    "ws_chance_top5": ee.get("ws_chance_top5"),
+                }
+        d20 = [r["top1_pool100"] for r in e16 if r.get("kind") == "held_out_day" and r["sub"] == s_]
+        for name, r, d in (("3.3 s", r33, d33), ("0--2 s", r20[0] if r20 else None, d20)):
+            if r is None:
+                continue
+            rows.append(
+                [
+                    S,
+                    name,
+                    pct(r["top1_pool100"]),
+                    pct(r["top10"]),
+                    pct(r["cat"]),
+                    pct(r["ws_top1"]),
+                    pct(r["ws_chance_top1"]),
+                    pct(r.get("ws_top5")),
+                    pct(r.get("ws_chance_top5")),
+                    pct(np.mean(d)) if d else "--",
+                ]
+            )
+    out.append(
+        tab(
+            "COFETT recall-window control (E16): EEGNet trained and tested on epochs cut 0--2\\,s after recall onset (always inside the recall period) versus the 3.3\\,s window used elsewhere (which crosses into the rest period in 33\\% of trials). Within-day = candidates restricted to the same day; held-out day = mean pool-100 top-1 over the four held-out-day folds.",
+            [
+                "participant",
+                "window",
+                "p100",
+                "top-10",
+                "cat",
+                "within-day top-1",
+                "chance",
+                "within-day top-5",
+                "chance",
+                "held-out day p100",
+            ],
+            rows,
+            "tab:s20",
         )
     )
     open(out_path, "w", encoding="utf-8").write("\n".join(out))

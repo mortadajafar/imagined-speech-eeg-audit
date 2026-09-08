@@ -17,6 +17,7 @@ reported item to the script that produced its inputs and to the log folder expec
 | Fig. 4 (occlusion) | `within_run_controls.py`, `reading_to_imagining.py` | `e7_controls`, `e3b_seeds` | 0; 1, 2 |
 | Fig. 5 left, Tables S9, S10, S16 | `mechanism_probes.py`, `eegsem/analysis/matched_pools.py` | `e11` | 0 |
 | Leave-runs-out and leave-one-day-out (Tables S11, S13) | `leave_runs_out.py --mode random_runs`, `--mode day` | `e12`, `e12c` | 0 |
+| COFETT recall-window control (Table S20) | `cofett_window_control.py` on caches built with `build_cofett_cache.py --win_s 2.0` | `e16` | 0 |
 | COFETT (Tables S7, S12) | `cofett_transfer.py`, `leave_runs_out.py --mode cofett_day` | `e5_cofett`, `e5a`, `e12b` | 0 |
 | Cross-participant transfer (Table S5) | `cross_subject.py` | `e2_loso` | 0 |
 | Reading-to-imagining transfer and data efficiency (Table S6) | `reading_to_imagining.py` | `e3_transfer`, `e3b_seeds`, `e3c` | 0, 1, 2 |
